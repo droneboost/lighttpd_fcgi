@@ -11,7 +11,8 @@ function changeSettingsNetworkSettings(obj)
     var param = "";
     //param.packet[0].id = parent.header.getId();
 	obj = document.getElementById("ssid");
-	param += obj.value;
+	param += 'set,wifisetting,';
+        param += obj.value;
 	param += ',';
 	var select     = document.getElementById("selectEncryptionType")
 	if((select.value == "no_security") || (select.value == "")) {
