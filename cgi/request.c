@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mqueue.h>
+#include <unistd.h>
 
 /* some of the HTTP variables we are interest in */
 #define MAX_HTTP_VARS (30)
@@ -38,24 +39,37 @@ char* http_var_names[MAX_HTTP_VARS] = {
     "SERVER_SOFTWARE"
 };
 
-#define MSG_QUEEN_NAME "/request_send_queue"
+#define L2W_MSG_QUEUE "/l2w_msg_queue"
+#define W2L_MSG_QUEUE "/w2l_msg_queue"
 #define EMPTY_REQUEST_MSG "Content-type: text/plain\r\n\r\nempty request string\n"
 #define EMPTY_API_NAME_MSG "Content-type: text/plain\r\n\r\nempty api name\n"
 #define MAX_REQ_PARAMS (10)
 #define MAX_REQ_LEN (1024)
 #define MAX_RESP_LEN (1024)
-static mqd_t q_send;
-static mqd_t q_read;
+static mqd_t l2w_qhd;
+static mqd_t w2l_qhd;
 
 void handle_set_request(char* params[], FCGX_Request* request)
 {
     char resp[MAX_RESP_LEN] = {0};
+    int msg_len = 0;
 
     if (0 == strcmp(params[1], "wifisetting")) {
         if (params[2] != NULL && params[4] != NULL && strlen(params[2]) != 0 && strlen(params[4]) != 0) {  // ssid & key are not empty
             sprintf(resp, "%s:%s:%s", params[2], params[3], params[4]);;
-            mq_send(q_send, resp, strlen(resp), 1);
-            sprintf(resp, "Content-type: text/plain\r\n\r\n&s:%s:%s:%s:%s\n", params[0], params[1], params[2], params[3], params[4]);
+            mq_send(l2w_qhd, resp, strlen(resp), 1);
+            sleep(1);
+            memset(resp, 0, MAX_RESP_LEN);
+            msg_len = mq_receive(w2l_qhd, resp, 1024, NULL);
+            if (msg_len > 0 && strcmp(resp, "softap")) {  // check if station or softap mode
+                sprintf(resp, "Content-type: text/plain\r\n\r\n\nSet failed, current mode is softap\n");
+            }
+            else if(msg_len > 0 && strcmp(resp, "station")) {
+                sprintf(resp, "Content-type: text/plain\r\n\r\ns:%s:%s:%s:%s\n", params[0], params[1], params[2], params[3], params[4]);
+            }
+            else {
+                sprintf(resp, "Content-type: text/plain\r\n\r\n\nI'm not sure if wifi setting is successful!\n");
+            }
         }
         else {
             sprintf(resp, "Content-type: text/plain\r\n\r\nwifi setting error\n");
@@ -98,7 +112,8 @@ int main(void)
 
     mqattr.mq_maxmsg = 10;
     mqattr.mq_msgsize = 1024;
-    q_send = mq_open(MSG_QUEEN_NAME, O_WRONLY | O_NONBLOCK | O_CREAT, S_IRUSR | S_IWUSR, &mqattr);
+    l2w_qhd = mq_open(L2W_MSG_QUEUE, O_WRONLY | O_NONBLOCK | O_CREAT, S_IRUSR | S_IWUSR, &mqattr);
+    w2l_qhd = mq_open(W2L_MSG_QUEUE, O_RDONLY | O_NONBLOCK | O_CREAT, S_IRUSR | S_IWUSR, &mqattr);
 
     while (0 == FCGX_Accept_r(&request)) {
         for (i = 0; i < MAX_REQ_PARAMS; i++) params[i] = NULL;
@@ -145,7 +160,8 @@ int main(void)
 #endif
     }
 
-    mq_close(q_send);
+    mq_close(l2w_qhd);
+    mq_close(w2l_qhd);
     FCGX_Finish();
     return 0;
 }
