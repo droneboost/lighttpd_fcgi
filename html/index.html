@@ -1,14 +1,69 @@
-<!doctype html>
 <html lang="en">
  <head>
-  <meta charset="UTF-8">
-  <title>Bithollow</title>
+ <meta name="copyright" content="Copyright 2015 bithollow.github.io">
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+ <title>Bithollow Wireless Settings</title>
+ <script type="text/javascript" src="ajax.js"></script>
+ <script type="text/javascript" src="wifi.js"></script>
  </head>
  <body>
- <table>
- <tr align = "center">
-	<td align = "center"><img src="apm.jpg"></td>
- </tr>
- </table>
+ <form action="#" name="networksettings">
+   <fieldset style="padding: 10px;">
+     <legend><font size="4"><b>Wireless Settings</b></font></legend>
+      <table width="100%">
+        <tr>
+          <td width="5%"></td>
+          <td width="45%"><font size="4">SSID</font></td>
+	      <td width="50%"><input name="ssid" id="ssid" type="text" size="30" value="" maxlength="32"><font size="4">(TODO: Add AP Scan button)</font></td>
+        </tr>
+        <tr>
+          <td width="5%"></td>
+          <td width="45%"><font size="4">Security Method</font></td>
+          <td width="50%">
+           <select id="selectEncryptionType" name="Security" onChange="onSelectEncryptionType()">
+            <option value="no_security">No Security</option>
+            <option value="wep">WEP</option>
+            <option value="wpa_psk_aes">WPA-PSK (AES)</option>
+            <option value="wpa_psk_tkip">WPA-PSK (TKIP)</option>
+            <option value="wpa2_psk_aes">WPA2-PSK (AES)</option>
+            <option value="wpa2_psk_tkip">WPA2-PSK (TKIP)</option>
+		   </select>
+	      </td>
+        </tr>
+      </table>
+     <div id="divSecurityKey">
+      <table width="100%" bgcolor="#ffffff">
+	   <tr>
+  	    <td width="5%" align="right"></td>
+  	    <td width="45%"><font size="4">Security Key</font></td>
+	    <td width="50%">
+	     <input id="key" type="password" name="key" value="" size="30" maxlength="26" onChange="onKeyUpTextWepKey()"/>
+	    </td>
+       </tr>
+      </table>
+     </div>
+	 <table width="100%" align="center" bgcolor="#ffffff" cellspacing="6" cellpadding="6">
+	  <tr>
+	   <td align="center">
+	    <input type="button" name="apply" id="apply" value="  Apply  " onClick="changeSettingsNetworkSettings(this)"/>
+	   </td>
+	  </tr>
+	 </table>
+   </fieldset>
+   <fieldset style="padding: 10px;">
+	<legend><font size="4"><b>Firmware version</b></font></legend>
+     <div id="divFirmwareUpdate">
+      <table width="100%" bgcolor="#ffffff">
+	   <tr>
+  	    <td width="5%" align="right"></td>
+  	    <td width="45%"><font size="4">Current firmware on the board: ver1.2.3</font><br>
+		<font size="4">Latest firmware on the server: ver1.2.5 (<a href="http://bithollow.local">Update?</a>)</font>
+		</td>
+	    <td width="50%"></td>
+       </tr>
+      </table>
+     </div>
+   </fieldset>
+ </form>
  </body>
 </html>
